@@ -25,6 +25,12 @@ function Register() {
     theme: "dark"
   }
 
+  useEffect(() => {
+    if (localStorage.getItem('chat-app-user')) {
+      navigate('/');
+    }
+  })
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     if (handleValidation()) {
@@ -81,8 +87,8 @@ function Register() {
           <input type="email" placeholder='Email' name='email' onChange={(e) => handleChange(e)}/>
           <input type="password" placeholder='Senha' name='password' onChange={(e) => handleChange(e)}/>
           <input type="password" placeholder='Confirmar Senha' name='confirmPassword' onChange={(e) => handleChange(e)}/>
-          <button type="submit">Cadastrar</button>
-          <span>Já está cadastrado? <Link to="/login">Login</Link></span>
+          <button type="submit">Criar conta</button>
+          <span>Já tem uma conta? <Link to="/login">Login</Link></span>
         </form>
       </FormContainer>
       <ToastContainer>

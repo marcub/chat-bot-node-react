@@ -30,10 +30,44 @@ module.exports.register = async (request, response, next) => {
             password: hashedPassword
         });
 
-        delete user.passwword;
+        const userObj = user.toObject();
+        delete userObj.password;
 
         return response.json({
-            user,
+            user: userObj,
+            status: true
+        })
+    } catch (ex) {
+        next(ex);
+    }
+}
+
+module.exports.login = async (request, response, next) => {
+
+    try {
+        const {username, password} = request.body;
+
+        const user = await User.findOne({ username });
+        if (!user) {
+            return response.json({
+                msg: "Username ou senha incorretos.",
+                status: false
+            })
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return response.json({
+                msg: "Username ou senha incorretos.",
+                status: false
+            })
+        }
+
+        const userObj = user.toObject();
+        delete userObj.password;
+
+        return response.json({
+            user: userObj,
             status: true
         })
     } catch (ex) {
