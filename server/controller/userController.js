@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const User = require("../model/userModel");
 const bcrypt = require("bcrypt");
 
@@ -71,6 +72,51 @@ module.exports.login = async (request, response, next) => {
             status: true
         })
     } catch (ex) {
+        next(ex);
+    }
+}
+
+module.exports.setAvatar = async (request, response, next) => {
+
+    try {
+        const userId = request.params.id;
+        const avatarImage = request.body.image;
+
+        if (!mongoose.isValidObjectId(userId)) {
+            return response.status(400).json({
+                error: "Usuário não é válido"
+            })
+        }
+
+        if (!avatarImage || typeof avatarImage !== 'string') {
+            return response.status(400).json({ error: 'Imagem do avatar é obrigatória e deve ser uma string' });
+        }
+
+        const userData = await User.findByIdAndUpdate(
+            userId, 
+            {
+                isAvatarImageSet: true,
+                avatarImage
+            },
+            {
+                new: true
+            }
+        )
+
+        if (!userData) {
+            return response.status(404).json({ error: 'Usuário não encontrado' });
+        }
+
+        return response.status(200).json({
+            isSet: userData.isAvatarImageSet,
+            image: userData.avatarImage
+        })
+    } catch (ex) {
+
+        if (ex.name === 'ValidationError') {
+            return response.status(400).json({ error: ex.message });
+        }
+
         next(ex);
     }
 }
