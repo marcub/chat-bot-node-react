@@ -27,7 +27,7 @@ export default function SetAvatar() {
     if (!localStorage.getItem('chat-app-user')) {
       navigate('/login');
     }
-  })
+  }, []);
 
   const setAvatarPicture = async () => {
     if (selectedAvatar === undefined) {
@@ -43,7 +43,7 @@ export default function SetAvatar() {
           user.isAvatarSet = true;
           user.avatarImage = data.image;
           localStorage.setItem("chat-app-user", JSON.stringify(user));
-          navigate('/');
+          navigate('/chat');
         } else {
           toast.error("Erro ao selecionar avatar, por favor tente novamente.", toastOptions);
         }
