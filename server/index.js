@@ -1,17 +1,20 @@
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
-const userRoutes = require("./routes/userRoutes")
+import express, { json } from "express";
+import dotenv from 'dotenv';
+import cors from "cors";
+import { connect } from "mongoose";
+import userRoutes from "./routes/userRoutes.js";
+import pandaRoutes from "./routes/pandaRoutes.js";
 
 const app = express();
-require("dotenv").config();
+dotenv.config();
 
 app.use(cors());
-app.use(express.json());
+app.use(json());
 
 app.use("/api/auth", userRoutes);
+app.use("/api", pandaRoutes);
 
-mongoose.connect(process.env.MONGO_URL).then(()=> {
+connect(process.env.MONGO_URL).then(()=> {
     console.log("DB connection successfull")
 }).catch((err)=> {
     console.log(err.message)

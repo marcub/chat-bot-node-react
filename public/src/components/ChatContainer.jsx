@@ -1,27 +1,29 @@
 import React, { useEffect, useState } from 'react'
+import axios from 'axios';
 import styled from 'styled-components'
 import Logo from '../assets/logo.svg'
 import Logout from './Logout';
 import ChatInput from './ChatInput';
 import Messages from './Messages';
+import { getUpcomingMatches } from '../utils/ApiRoutes';
+import { MdLiveTv } from "react-icons/md";
+
+const INITIAL_MENU = {
+    text: 'Olá! Como posso ajudar você hoje?',
+    options: [
+        { label: '🎮 Próximos jogos', value: 'nextGames' },
+        { label: '📰 Notícias recentes', value: 'news' },
+        { label: '💬 Fale comigo', value: 'chat' }
+    ],
+    disabled: false
+};
 
 export default function ChatContainer() {
 
     const [messages, setMessages] = useState([]);
 
     useEffect(() => {
-        setMessages([
-            {
-                from: 'bot',
-                text: 'Olá! Como posso ajudar você hoje?',
-                options: [
-                    { label: '🎮 Próximos jogos', value: 'nextGames' },
-                    { label: '📰 Notícias recentes', value: 'news' },
-                    { label: '💬 Fale comigo', value: 'chat' }
-                ],
-                disabled: false
-            }
-        ])
+        setMessages([{from: 'bot', ...INITIAL_MENU}]);
     }, []);
 
     const handleOptionClick = (optionValue, optionText, messageIndex) => {
@@ -37,18 +39,80 @@ export default function ChatContainer() {
             { from: 'user', text: optionText, options: [], disabled: false },
         ]);
 
-        setTimeout(() => {
+        setTimeout( async () => {
             let botResponse;
             switch (optionValue) {
                 case 'nextGames':
-                    botResponse = {
-                        from: 'bot',
-                        text: 'Próximos jogos do Flamengo:\n1. Flamengo x Corinthians - 10/05/2025\n2. Flamengo x Vasco - 15/05/2025',
-                        options: [
-                            { label: 'Voltar ao menu inicial', value: 'start' },
-                        ],
-                        disabled: false
-                    };
+                    try {
+                        const response = await axios.get(getUpcomingMatches);
+                        const data = response.data;
+                        const upcomingMatchesHtml = data.slice(0, 2).map((match, index) => {
+                            const opponents = match.opponents.map(op => op.opponent?.name || 'A ser definido');
+                            const logos = match.opponents.map(op => op.opponent?.image_url || '');
+                            const date = new Date(match.begin_at);
+                            const formattedDate = date.toLocaleDateString('pt-BR', {
+                                weekday: 'long',
+                                day: '2-digit',
+                                month: 'long',
+                                year: 'numeric'
+                            }).replace(/^\w/, c => c.toUpperCase())
+                            const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                            const tournament = `${match.league.name} ${match.serie.name || ''}`.trim();
+                            const matchFormat = match.number_of_games === 3 ? 'MD3' : 'MD' + match.number_of_games;
+                            const streamsList = match.streams_list;
+                            const mainStream = streamsList[0];
+                            const streamUrl = mainStream.raw_url;
+                            return (
+                                <div class="match-card">
+                                    <div class="match-date">{formattedDate}</div>
+                                    <div class="match-details">
+                                        <div class="match-time">🕒 {time}</div>
+                                        <div class="match-teams">
+                                            {opponents.length === 2 ? (
+                                                <>
+                                                    <span className="team-with-logo">
+                                                        <img src={logos[0]} alt={`${opponents[0]} logo`} className="team-logo" />
+                                                        {opponents[0]}
+                                                    </span>
+                                                    <span className="team-separator">x</span>
+                                                    <span className="team-with-logo">
+                                                        <img src={logos[1]} alt={`${opponents[1]} logo`} className="team-logo" />
+                                                        {opponents[1]}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                <span>{opponents.join(' x ')}</span>
+                                            )}
+                                        </div>
+                                        <div class="match-format">{matchFormat}</div>
+                                        <div class="match-tournament">🏆 {tournament}</div>
+                                        <a href={streamUrl} target="_blank" className="match-stream" rel="noreferrer">
+                                            <MdLiveTv size={25} color="#6200ea" />
+                                        </a>
+                                    </div>
+                                </div>
+                            );
+                        });
+
+                        botResponse = {
+                            from: 'bot',
+                            text: (
+                                <div className="matches-container">
+                                    <h4>Próximos jogos</h4>
+                                    {upcomingMatchesHtml.length > 0 ? upcomingMatchesHtml : <p>Nenhum jogo encontrado.</p>}
+                                </div>
+                            ),
+                            options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
+                            disabled: false,
+                        };
+                    } catch (error) {
+                        botResponse = {
+                            from: 'bot',
+                            text: error.message || 'Erro ao carregar os próximos jogos.',
+                            options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
+                            disabled: false,
+                        };
+                    }
                     break;
                 case 'news':
                     botResponse = {
@@ -69,16 +133,7 @@ export default function ChatContainer() {
                     };
                     break;
                 case 'start':
-                    botResponse = {
-                        from: 'bot',
-                        text: 'Olá! Como posso ajudar você hoje?',
-                        options: [
-                            { label: 'Próximos jogos', value: 'nextGames' },
-                            { label: 'Notícias recentes', value: 'news' },
-                            { label: 'Fale comigo', value: 'chat' },
-                        ],
-                        disabled: false
-                    };
+                    botResponse = {from: 'bot', ...INITIAL_MENU};
                     break;
                 default:
                     botResponse = {
@@ -105,13 +160,8 @@ export default function ChatContainer() {
                 ...prev,
                 {
                     from: 'bot',
-                    text: 'Entendi! Vamos voltar ao menu inicial.',
-                    options: [
-                        { label: 'Próximos jogos', value: 'nextGames' },
-                        { label: 'Notícias recentes', value: 'news' },
-                        { label: 'Fale comigo', value: 'chat' },
-                    ],
-                    disabled: false
+                    ...INITIAL_MENU,
+                    text: 'Entendi! Vamos voltar ao menu inicial.'
                 },
             ]);
         }, 500);
@@ -164,5 +214,71 @@ const Container = styled.div`
                 }
             }
         }
+    }
+    .matches-container {
+        color: white;
+        h4 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+    }
+    .match-card {
+        background: #1a1a1a;
+        border-radius: 8px;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid #444;
+    }
+    .match-date {
+        font-size: 0.9rem;
+        color: #bbb;
+        margin: 0.5rem 0.3rem;
+    }
+    .match-details {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+    .match-time {
+        color: #bbb;
+        margin: 0 0.5rem;
+    }
+    .match-teams {
+        display: flex;
+        flex: 1;
+        text-align: center;
+        color: white;
+        margin: 0 0.5rem;
+        gap: 0.5rem;
+    }
+    .team-with-logo {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .team-logo {
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
+        border-radius: 4px;
+    }
+    .match-score {
+        margin-left: 0.5rem;
+        color: #888;
+    }
+    .match-format {
+        background: #6200ea;
+        color: white;
+        padding: 0.2rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        margin: 0 0.5rem;
+    }
+    .match-tournament {
+        color: #bbb;
+        font-size: 0.8rem;
+        margin: 0 0.5rem;
     }
 `;

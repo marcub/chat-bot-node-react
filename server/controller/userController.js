@@ -1,8 +1,8 @@
-const { default: mongoose } = require("mongoose");
-const User = require("../model/userModel");
-const bcrypt = require("bcrypt");
+import { default as mongoose } from "mongoose";
+import User from "../model/userModel.js";
+import { hash, compare } from "bcrypt";
 
-module.exports.register = async (request, response, next) => {
+export async function register(request, response, next) {
 
     try {
         const {username, email, password} = request.body;
@@ -23,7 +23,7 @@ module.exports.register = async (request, response, next) => {
             })
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await hash(password, 10);
 
         const user = await User.create({
             username: username,
@@ -43,7 +43,7 @@ module.exports.register = async (request, response, next) => {
     }
 }
 
-module.exports.login = async (request, response, next) => {
+export async function login(request, response, next) {
 
     try {
         const {username, password} = request.body;
@@ -56,7 +56,7 @@ module.exports.login = async (request, response, next) => {
             })
         }
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        const isPasswordValid = await compare(password, user.password);
         if (!isPasswordValid) {
             return response.json({
                 msg: "Username ou senha incorretos.",
@@ -76,7 +76,7 @@ module.exports.login = async (request, response, next) => {
     }
 }
 
-module.exports.setAvatar = async (request, response, next) => {
+export async function setAvatar(request, response, next) {
 
     try {
         const userId = request.params.id;
