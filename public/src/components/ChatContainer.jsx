@@ -5,13 +5,14 @@ import Logo from '../assets/logo.svg'
 import Logout from './Logout';
 import ChatInput from './ChatInput';
 import Messages from './Messages';
-import { getUpcomingMatches } from '../utils/ApiRoutes';
+import { getUpcomingMatches, getPastMatches } from '../utils/ApiRoutes';
 import { MdLiveTv } from "react-icons/md";
 
 const INITIAL_MENU = {
     text: 'Olá! Como posso ajudar você hoje?',
     options: [
         { label: '🎮 Próximos jogos', value: 'nextGames' },
+        { label: '🎮 Últimos jogos', value: 'pastGames' },
         { label: '📰 Notícias recentes', value: 'news' },
         { label: '💬 Fale comigo', value: 'chat' }
     ],
@@ -25,6 +26,85 @@ export default function ChatContainer() {
     useEffect(() => {
         setMessages([{from: 'bot', ...INITIAL_MENU}]);
     }, []);
+
+    const handleBotResponseMatches = async (type) => {
+        let botResponse;
+        try {
+            const endpoint = (type === 'past') ? getPastMatches : getUpcomingMatches;
+            const response = await axios.get(endpoint);
+            const data = response.data;
+            const upcomingMatchesHtml = data.map((match, index) => {
+                const opponents = match.opponents.map(op => op.opponent?.name || 'A ser definido');
+                const logos = match.opponents.map(op => op.opponent?.image_url || '');
+                const scores = match.results.map(op => op?.score || '0');
+                const date = new Date(match.begin_at);
+                const formattedDate = date.toLocaleDateString('pt-BR', {
+                    weekday: 'long',
+                    day: '2-digit',
+                    month: 'long',
+                    year: 'numeric'
+                }).replace(/^\w/, c => c.toUpperCase())
+                const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const tournament = `${match.league.name} ${match.serie.name || ''}`.trim();
+                const matchFormat = match.number_of_games === 3 ? 'MD3' : 'MD' + match.number_of_games;
+                const streamsList = match.streams_list;
+                const mainStream = streamsList[0];
+                const streamUrl = mainStream.raw_url;
+                return (
+                    <div class="match-card">
+                        <div class="match-date">{formattedDate}</div>
+                        <div class="match-details">
+                            <div class="match-time">🕒 {time}</div>
+                            <div class="match-teams">
+                                {opponents.length === 2 ? (
+                                    <>
+                                        <span className="team-with-logo">
+                                            <img src={logos[0]} alt={`${opponents[0]} logo`} className="team-logo" />
+                                            {opponents[0]}
+                                        </span>
+                                        <span className="team-separator">x</span>
+                                        <span className="team-with-logo">
+                                            <img src={logos[1]} alt={`${opponents[1]} logo`} className="team-logo" />
+                                            {opponents[1]}
+                                        </span>
+                                    </>
+                                ) : (
+                                    <span>{opponents.join(' x ')}</span>
+                                )}
+                            </div>
+                            {type === 'past' ? (<span className="match-score">{scores[0]} x {scores[1]}</span>) : ''}
+                            <div class="match-format">{matchFormat}</div>
+                            <div class="match-tournament">🏆 {tournament}</div>
+                            <a href={streamUrl} target="_blank" className="match-stream" rel="noreferrer">
+                                <MdLiveTv size={25} color="#6200ea" />
+                            </a>
+                        </div>
+                    </div>
+                );
+            });
+
+            botResponse = {
+                from: 'bot',
+                text: (
+                    <div className="matches-container">
+                        <h4>Próximos jogos</h4>
+                        {upcomingMatchesHtml.length > 0 ? upcomingMatchesHtml : <p>Nenhum jogo encontrado.</p>}
+                    </div>
+                ),
+                options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
+                disabled: false,
+            };
+        } catch (error) {
+            botResponse = {
+                from: 'bot',
+                text: error.message || 'Erro ao carregar os próximos jogos.',
+                options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
+                disabled: false,
+            };
+        }
+
+        return botResponse;
+    }
 
     const handleOptionClick = (optionValue, optionText, messageIndex) => {
 
@@ -43,76 +123,10 @@ export default function ChatContainer() {
             let botResponse;
             switch (optionValue) {
                 case 'nextGames':
-                    try {
-                        const response = await axios.get(getUpcomingMatches);
-                        const data = response.data;
-                        const upcomingMatchesHtml = data.slice(0, 2).map((match, index) => {
-                            const opponents = match.opponents.map(op => op.opponent?.name || 'A ser definido');
-                            const logos = match.opponents.map(op => op.opponent?.image_url || '');
-                            const date = new Date(match.begin_at);
-                            const formattedDate = date.toLocaleDateString('pt-BR', {
-                                weekday: 'long',
-                                day: '2-digit',
-                                month: 'long',
-                                year: 'numeric'
-                            }).replace(/^\w/, c => c.toUpperCase())
-                            const time = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-                            const tournament = `${match.league.name} ${match.serie.name || ''}`.trim();
-                            const matchFormat = match.number_of_games === 3 ? 'MD3' : 'MD' + match.number_of_games;
-                            const streamsList = match.streams_list;
-                            const mainStream = streamsList[0];
-                            const streamUrl = mainStream.raw_url;
-                            return (
-                                <div class="match-card">
-                                    <div class="match-date">{formattedDate}</div>
-                                    <div class="match-details">
-                                        <div class="match-time">🕒 {time}</div>
-                                        <div class="match-teams">
-                                            {opponents.length === 2 ? (
-                                                <>
-                                                    <span className="team-with-logo">
-                                                        <img src={logos[0]} alt={`${opponents[0]} logo`} className="team-logo" />
-                                                        {opponents[0]}
-                                                    </span>
-                                                    <span className="team-separator">x</span>
-                                                    <span className="team-with-logo">
-                                                        <img src={logos[1]} alt={`${opponents[1]} logo`} className="team-logo" />
-                                                        {opponents[1]}
-                                                    </span>
-                                                </>
-                                            ) : (
-                                                <span>{opponents.join(' x ')}</span>
-                                            )}
-                                        </div>
-                                        <div class="match-format">{matchFormat}</div>
-                                        <div class="match-tournament">🏆 {tournament}</div>
-                                        <a href={streamUrl} target="_blank" className="match-stream" rel="noreferrer">
-                                            <MdLiveTv size={25} color="#6200ea" />
-                                        </a>
-                                    </div>
-                                </div>
-                            );
-                        });
-
-                        botResponse = {
-                            from: 'bot',
-                            text: (
-                                <div className="matches-container">
-                                    <h4>Próximos jogos</h4>
-                                    {upcomingMatchesHtml.length > 0 ? upcomingMatchesHtml : <p>Nenhum jogo encontrado.</p>}
-                                </div>
-                            ),
-                            options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
-                            disabled: false,
-                        };
-                    } catch (error) {
-                        botResponse = {
-                            from: 'bot',
-                            text: error.message || 'Erro ao carregar os próximos jogos.',
-                            options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
-                            disabled: false,
-                        };
-                    }
+                    botResponse = await handleBotResponseMatches('upcoming');
+                    break;
+                case 'pastGames':
+                    botResponse = await handleBotResponseMatches('past');
                     break;
                 case 'news':
                     botResponse = {
@@ -265,7 +279,7 @@ const Container = styled.div`
         border-radius: 4px;
     }
     .match-score {
-        margin-left: 0.5rem;
+        margin: 0 0.5rem;
         color: #888;
     }
     .match-format {

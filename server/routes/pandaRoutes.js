@@ -1,7 +1,8 @@
 import { Router } from 'express';
 const router = Router();
-import { getUpcomingMatches } from '../controller/pandaController.js';
+import { getUpcomingMatches, getPastMatches } from '../controller/pandaController.js';
 
 router.get('/upcomingMatches', getUpcomingMatches);
+router.get('/pastMatches', getPastMatches);
 
 export default router;
