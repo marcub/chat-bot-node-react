@@ -15,7 +15,6 @@ export async function getUpcomingMatches(request, response, next) {
         }
 
         const data_json = await data.json();
-        console.log(data_json);
         return response.status(data.status).json(data_json);
     } catch (error) {
         response.status(500).json({ error: 'Erro interno do servidor.' });
@@ -38,7 +37,6 @@ export async function getPastMatches(request, response, next) {
         }
 
         const data_json = await data.json();
-        console.log(data_json);
         return response.status(data.status).json(data_json);
     } catch (error) {
         response.status(500).json({ error: 'Erro interno do servidor.' });

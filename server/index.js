@@ -4,6 +4,8 @@ import cors from "cors";
 import { connect } from "mongoose";
 import userRoutes from "./routes/userRoutes.js";
 import pandaRoutes from "./routes/pandaRoutes.js";
+import ragRoutes from "./routes/ragRoutes.js";
+import { trainRag } from "./service/ragService.js";
 
 const app = express();
 dotenv.config();
@@ -13,6 +15,17 @@ app.use(json());
 
 app.use("/api/auth", userRoutes);
 app.use("/api", pandaRoutes);
+app.use("/api", ragRoutes);
+
+(async () => {
+    try {
+        await trainRag();
+        console.log('Modelo RAG treinado com sucesso');
+    } catch (error) {
+        console.error('Erro ao treinar o modelo RAG:', error.message);
+        process.exit(1);
+    }
+})();
 
 connect(process.env.MONGO_URL).then(()=> {
     console.log("DB connection successfull")

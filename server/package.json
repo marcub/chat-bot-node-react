@@ -11,13 +11,20 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@langchain/core": "^0.3.51",
+    "@langchain/openai": "^0.5.10",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "langchain": "^0.3.24",
     "mongoose": "^8.14.0",
     "node-fetch": "^3.3.2",
     "nodemon": "^3.1.10",
+    "pdf-parse": "^1.1.1",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "@types/pdf-parse": "^1.1.5"
   }
 }

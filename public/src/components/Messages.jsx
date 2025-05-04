@@ -2,22 +2,27 @@ import React from 'react'
 import styled from 'styled-components'
 
 export default function Messages({ messages, onOptionClick }) {
-  return (
-    <Container>
-        {messages.map((message, index) => (
-            <div className={`message-item ${message.from === 'user' ? 'user' : 'bot'} ${message.disabled ? 'disabled' : ''}`} key={index}>
-                <div className={`message-text ${message.disabled ? 'disabled' : ''}`}>{message.text}</div>
-                {!message.disabled && message.options.length > 0 && (
-                    <div className="options-container">
-                        {message.options.map((option, idx) => (
-                            <button className="option-button" key={idx} onClick={() => onOptionClick(option.value, option.label, index)}>{option.label}</button>
-                        ))}
+    const user = JSON.parse(localStorage.getItem("chat-app-user"));
+    return (
+        <Container>
+            {messages.map((message, index) => (
+                <div className={`message-item ${message.from === 'user' ? 'user' : 'bot'} ${message.disabled ? 'disabled' : ''}`} key={index}>
+                    <div className={`message-text ${message.disabled ? 'disabled' : ''}`}>{message.text}</div>
+                    {!message.disabled && message.options.length > 0 && (
+                        <div className="options-container">
+                            {message.options.map((option, idx) => (
+                                <button className="option-button" key={idx} onClick={() => onOptionClick(option.value, option.label, index)}>{option.label}</button>
+                            ))}
+                        </div>
+                    )}
+                    <div className="message-meta">
+                        {message.from === 'user' && <span className="message-sender">{user.username}</span>}
+                        <span className="message-time">{message.timestamp || 'N/A'}</span>
                     </div>
-                )}
-            </div>
-        ))}
-    </Container>
-  )
+                </div>
+            ))}
+        </Container>
+    )
 }
 
 const Container = styled.div`
@@ -31,7 +36,7 @@ const Container = styled.div`
         display: flex;
         flex-direction: column;
         .message-text {
-            background-color: #9900ff20;
+            background-color: #f4b31c33;
             padding: 0.5rem 1rem;
             border-radius: 10px;
             color: white;
@@ -43,7 +48,7 @@ const Container = styled.div`
             gap: 0.5rem;
             margin-top: 0.5rem;
             .option-button {
-                background-color: #9a86f3;
+                background-color: #dfa223;
                 color: white;
                 border: none;
                 padding: 0.5rem 1rem;
@@ -51,9 +56,22 @@ const Container = styled.div`
                 cursor: pointer;
                 transition: background-color 0.3s;
                 &:hover {
-                    background-color: #7b68ee;
+                    background-color: #b3560b;
                 }
             }
+        }
+        .message-meta {
+            margin-top: 0.3rem;
+            font-size: 0.75rem;
+            color: #cccccc;
+            display: flex;
+            gap: 0.5rem;
+        }
+        .message-sender {
+            font-weight: bold;
+        }
+        .message-time {
+            opacity: 0.8;
         }
     }
     .disabled {

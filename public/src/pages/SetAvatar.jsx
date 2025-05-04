@@ -40,7 +40,7 @@ export default function SetAvatar() {
         })
 
         if (data.isSet) {
-          user.isAvatarSet = true;
+          user.isAvatarImageSet = true;
           user.avatarImage = data.image;
           localStorage.setItem("chat-app-user", JSON.stringify(user));
           navigate('/chat');
@@ -121,7 +121,7 @@ const Container = styled.div`
   align-items: center;
   flex-direction: column;
   gap: 3rem;
-  background-color: #131324;
+  background-color: #1a2a44;
   height: 100vh;
   width: 100vw;
   .loader {
@@ -148,11 +148,11 @@ const Container = styled.div`
       }
     }
     .selected {
-      border: 0.4rem solid #4e0eff;
+      border: 0.4rem solid #b3560b;
     }
   }
   .submit-btn {
-    background-color: #997af0;
+    background-color: #dfa223;
     color: white;
     padding: 1rem 2rem;
     border: none;
@@ -163,7 +163,7 @@ const Container = styled.div`
     text-transform: uppercase;
     transition: 0.5s ease-in-out;
     &:hover {
-      background-color: #4e0eff;
+      background-color: #b3560b;
     }
   }
 `;

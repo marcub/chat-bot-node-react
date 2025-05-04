@@ -5,7 +5,7 @@ import Logo from '../assets/logo.svg'
 import Logout from './Logout';
 import ChatInput from './ChatInput';
 import Messages from './Messages';
-import { getUpcomingMatches, getPastMatches } from '../utils/ApiRoutes';
+import { getUpcomingMatches, getPastMatches, getAnswerQuestion } from '../utils/ApiRoutes';
 import { MdLiveTv } from "react-icons/md";
 
 const INITIAL_MENU = {
@@ -13,7 +13,6 @@ const INITIAL_MENU = {
     options: [
         { label: '🎮 Próximos jogos', value: 'nextGames' },
         { label: '🎮 Últimos jogos', value: 'pastGames' },
-        { label: '📰 Notícias recentes', value: 'news' },
         { label: '💬 Fale comigo', value: 'chat' }
     ],
     disabled: false
@@ -24,7 +23,7 @@ export default function ChatContainer() {
     const [messages, setMessages] = useState([]);
 
     useEffect(() => {
-        setMessages([{from: 'bot', ...INITIAL_MENU}]);
+        setMessages([{from: 'bot', ...INITIAL_MENU, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}]);
     }, []);
 
     const handleBotResponseMatches = async (type) => {
@@ -93,6 +92,7 @@ export default function ChatContainer() {
                 ),
                 options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
                 disabled: false,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
         } catch (error) {
             botResponse = {
@@ -100,6 +100,7 @@ export default function ChatContainer() {
                 text: error.message || 'Erro ao carregar os próximos jogos.',
                 options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
                 disabled: false,
+                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             };
         }
 
@@ -116,7 +117,7 @@ export default function ChatContainer() {
 
         setMessages((prev) => [
             ...prev,
-            { from: 'user', text: optionText, options: [], disabled: false },
+            { from: 'user', text: optionText, options: [], disabled: false, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
         ]);
 
         setTimeout( async () => {
@@ -128,26 +129,17 @@ export default function ChatContainer() {
                 case 'pastGames':
                     botResponse = await handleBotResponseMatches('past');
                     break;
-                case 'news':
-                    botResponse = {
-                        from: 'bot',
-                        text: 'Aqui estão algumas notícias recentes:\n1. Flamengo vence o Brasileirão 2024!\n2. São Paulo contrata novo técnico.',
-                        options: [
-                            { label: 'Voltar ao menu inicial', value: 'start' },
-                        ],
-                        disabled: false
-                    };
-                    break;
                 case 'chat':
                     botResponse = {
                         from: 'bot',
-                        text: 'Claro, sobre o que você gostaria de conversar?',
+                        text: 'Claro, o que você gostaria de saber da Fúria?',
                         options: [],
-                        disabled: false
+                        disabled: false,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     };
                     break;
                 case 'start':
-                    botResponse = {from: 'bot', ...INITIAL_MENU};
+                    botResponse = {from: 'bot', ...INITIAL_MENU, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })};
                     break;
                 default:
                     botResponse = {
@@ -156,28 +148,45 @@ export default function ChatContainer() {
                         options: [
                             { label: 'Voltar ao menu inicial', value: 'start' },
                         ],
-                        disabled: false
+                        disabled: false,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     };
             }
             setMessages((prev) => [...prev, botResponse]);
         }, 500);
     };
 
-    const handleSendMsg = (msg) => {
+    const handleSendMsg = async (msg) => {
         setMessages((prev) => [
             ...prev,
-            { from: 'user', text: msg, options: [], disabled: false },
+            { from: 'user', text: msg, options: [], disabled: false, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) },
         ]);
 
-        setTimeout(() => {
-            setMessages((prev) => [
-                ...prev,
-                {
+        setTimeout(async () => {
+            try {
+                const response = await axios.post(getAnswerQuestion, {
+                    question: msg
+                });
+                const botResponse = {
                     from: 'bot',
-                    ...INITIAL_MENU,
-                    text: 'Entendi! Vamos voltar ao menu inicial.'
-                },
-            ]);
+                    text: response.data.answer,
+                    options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
+                    disabled: false,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                };
+                setMessages((prev) => [...prev, botResponse]);
+            } catch (error) {
+                setMessages((prev) => [
+                    ...prev,
+                    {
+                        from: 'bot',
+                        text: `Ocorreu um erro ao processar sua solicitação. Por favor, tente outra pergunta.`,
+                        options: [{ label: 'Voltar ao menu inicial', value: 'start' }],
+                        disabled: false,
+                        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    },
+                ]);
+            }
         }, 500);
     };
 
