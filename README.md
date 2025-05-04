@@ -2,6 +2,14 @@
 
 O Clutch Chat é um aplicativo de chatbot full-stack desenvolvido com React no frontend, Node.js com Express no backend e MongoDB como banco de dados. Ele integra a API do PandaScore para fornecer informações históricas sobre a organização Fúria, além de utilizar a API da OpenAI para oferecer capacidades de processamento de linguagem natural (NLP) com RAG (Retrieval-Augmented Generation), treinado com dados históricos da Fúria. Isso permite interações conversacionais mais ricas e contextuais com os usuários. O chatbot também inclui funcionalidades de autenticação (login e registro), configuração de avatar e uma interface de chat interativa.
 
+![Login](https://github.com/marcub/chat-bot-node-react/blob/main/images/login.png)
+
+![Register](https://github.com/marcub/chat-bot-node-react/blob/main/images/register.png)
+
+![SetAvatar](https://github.com/marcub/chat-bot-node-react/blob/main/images/setAvatar.png)
+
+![Chat](https://github.com/marcub/chat-bot-node-react/blob/main/images/chat.png)
+
 ## Funcionalidades
 
 - **Frontend Interativo**: Interface de usuário construída com React, com rotas para registro, login, configuração de avatar e chat.
