@@ -66,8 +66,8 @@ export async function answerQuestion(question) {
 
     const model = new OpenAI({ 
         apiKey: process.env.OPENAI_API_KEY,
-        maxTokens: 512,
-        temperature: 0.7
+        maxTokens: 400,
+        temperature: 0.3
     });
     const chain = RetrievalQAChain.fromLLM(
         model,
