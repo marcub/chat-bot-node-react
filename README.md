@@ -78,7 +78,12 @@ cd chat-bot-node-react
    ```bash
    npm install
    ```
-3. Inicie o aplicativo React:
+3. Crie um arquivo `.env` na pasta `public` e adicione as variáveis abaixo:
+    ```
+    REACT_APP_BACK_URL=seu-endereço-do-servidor-aqui
+    ```
+    Por padrão utilizar: `http://localhost:5000`.
+4. Inicie o aplicativo React:
    ```bash
    npm start
    ```
